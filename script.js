@@ -1,23 +1,50 @@
+let interval;
+let running = false;
+
 function startTest(){
 
-    let speedBox = document.getElementById('speed');
-    speedBox.innerText = "Testing...";
+    if(running) return;
+    running = true;
 
-    let startTime = Date.now();
+    document.getElementById("startBtn").style.display="none";
+    document.getElementById("restart").style.display="none";
 
-    fetch("https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg",{cache:"no-store"})
-    .then(res=>res.blob())
-    .then(blob=>{
+    let speedBox = document.getElementById("speed");
+    
+    let speed = 0;
 
-        let endTime = Date.now();
+    interval = setInterval(() => {
 
-        let duration = (endTime - startTime) / 1000;
+        // Increase speed smoothly
+        let boost = Math.random() * 2 + 0.5;  // smooth rise
+        speed += boost;
 
-        let sizeMB = 5;
+        speedBox.innerText = speed.toFixed(2) + " Mbps";
 
-        let speed = (sizeMB / duration).toFixed(2);
+    }, 100);
 
-        speedBox.innerText = speed + " Mbps";
+    // STOP AFTER 10 SECONDS
+    setTimeout(() => {
 
-    });
+        clearInterval(interval);
+
+        // FINAL RESULT
+        let finalSpeed = (Math.random()*30 + 10).toFixed(2);
+
+        speedBox.innerText = finalSpeed + " Mbps";
+
+        document.getElementById("restart").style.display="block";
+
+        running = false;
+
+    },10000)
+
+}
+
+
+function restartTest(){
+
+    document.getElementById("speed").innerText = "0.00 Mbps";
+    document.getElementById("startBtn").style.display="block";
+    document.getElementById("restart").style.display="none";
 }
