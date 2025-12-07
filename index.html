@@ -1,46 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Indicator Online</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS: Fast.com Style & Layout --- */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --accent-color: #2ecc71; /* Green */
+            --grey-color: #a0a0a0;
+        }
 
-<title>Internet Speed Test</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Header top, Content center, Footer bottom */
+            align-items: center;
+            overflow: hidden;
+        }
 
-<link rel="stylesheet" href="style.css">
+        /* Top Header */
+        .header {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
+        .logo-icon {
+            font-size: 40px;
+            color: #000;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        /* Main Content Center */
+        .main-container {
+            text-align: center;
+            flex-grow: 1; /* Takes available space */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-text {
+            font-size: 22px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        /* Speed Meter Area */
+        .speed-meter-container {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .speed-value {
+            font-size: 180px; /* Big Font like Fast.com */
+            font-weight: 500;
+            letter-spacing: -4px;
+            color: #000;
+            line-height: 1;
+        }
+
+        .units-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .unit {
+            font-size: 36px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        /* Refresh Button */
+        .btn-reload {
+            background: transparent;
+            border: 2px solid #e0e0e0;
+            border-radius: 50%; /* Circular button */
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-top: 10px; /* Adjust position */
+        }
+
+        .btn-reload:hover {
+            border-color: var(--accent-color);
+            background-color: #f9f9f9;
+            transform: rotate(45deg);
+        }
+        
+        .btn-reload.disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Bottom Social Icons */
+        .footer {
+            margin-bottom: 40px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .social-icon {
+            font-size: 28px;
+            color: #555;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .social-icon:hover.telegram { color: #0088cc; }
+        .social-icon:hover.twitter { color: #000; } /* X is black */
+        .social-icon:hover.youtube { color: #ff0000; }
+
+    </style>
 </head>
 <body>
 
-<!-- ===== Monetag Ads ===== -->
-<script>
-(function(s){
- s.dataset.zone='10271595';
- s.src='https://nap5k.com/tag.min.js'
-})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-</script>
+    <header class="header">
+        <i class="fa-solid fa-gauge-high logo-icon"></i>
+        <div class="logo-text">Speed Indicator online</div>
+    </header>
 
-<script>
-(function(s){
- s.dataset.zone='10246941';
- s.src='https://gizokraijaw.net/vignette.min.js'
-})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-</script>
-<!-- ======================== -->
+    <main class="main-container">
+        <div id="status" class="status-text">Your Internet speed is</div>
 
-<div class="container">
+        <div class="speed-meter-container">
+            <div id="speed" class="speed-value">0</div>
+            
+            <div class="units-container">
+                <div id="unit" class="unit">Mbps</div>
+                <button id="reloadBtn" class="btn-reload" onclick="startTest()">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
 
-    <div class="logo">FAST</div>
+    <footer class="footer">
+        <a href="https://t.me/ashiqtech1" target="_blank" class="social-icon telegram">
+            <i class="fa-brands fa-telegram"></i>
+        </a>
+        <a href="https://x.com/ashiqtech1" target="_blank" class="social-icon twitter">
+            <i class="fa-brands fa-x-twitter"></i>
+        </a>
+        <a href="https://youtube.com/@ashiqtech1" target="_blank" class="social-icon youtube">
+            <i class="fa-brands fa-youtube"></i>
+        </a>
+    </footer>
 
-    <div class="speed" id="speed">0.00 Mbps</div>
+    <script>
+        /* --- JavaScript: 10-Second Real Speed Test --- */
 
-    <button id="startBtn" onclick="startTest()">START SPEED TEST</button>
+        // Using a larger file from a reliable CDN for better speed measurement over 10s
+        // Using a 10MB test file.
+        const TEST_FILE_URL = "http://speedtest.tele2.net/10MB.zip"; 
+        const TEST_DURATION_MS = 10000; // 10 seconds
 
-    <div id="restart" onclick="restartTest()">&#x21bb;</div>
+        const speedDisplay = document.getElementById('speed');
+        const unitDisplay = document.getElementById('unit');
+        const statusDisplay = document.getElementById('status');
+        const reloadBtn = document.getElementById('reloadBtn');
+        
+        let testStartTime;
+        let totalBytesLoaded = 0;
+        let isTesting = false;
+        let updateInterval;
+        let testTimeout;
+        let xhr; // Keep reference to cancel download
 
-</div>
+        function startTest() {
+            if (isTesting) return; // Prevent multiple clicks
+            isTesting = true;
 
-<script src="script.js"></script>
+            // Reset UI
+            speedDisplay.innerText = "0";
+            unitDisplay.innerText = "Kbps";
+            reloadBtn.classList.add('disabled'); // Disable button during test
+            
+            // Add cache buster
+            const downloadUrl = TEST_FILE_URL + "?nn=" + (new Date()).getTime();
 
+            testStartTime = (new Date()).getTime();
+            totalBytesLoaded = 0;
+
+            // Start Download
+            downloadFile(downloadUrl);
+
+            // Start updating the UI periodically for fluctuation effect
+            updateInterval = setInterval(updateUI, 200); // Update every 200ms
+
+            // Stop test after 10 seconds
+            testTimeout = setTimeout(stopTest, TEST_DURATION_MS);
+        }
+
+        function downloadFile(url) {
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.responseType = "blob"; // Important for correct size tracking
+
+            // Track progress
+            xhr.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    totalBytesLoaded = event.loaded;
+                }
+            };
+
+            xhr.onload = function() {
+                // If file finishes before 10s, start another download
+                if (isTesting) {
+                    downloadFile(url + "&p=" + Math.random());
+                }
+            };
+
+            xhr.onerror = function() {
+                if (isTesting) {
+                    // Try again on error, or handle it
+                     downloadFile(url + "&r=" + Math.random());
+                }
+            };
+            
+            xhr.send();
+        }
+
+        // Function to calculate and update UI during test
+        function updateUI() {
+            const currentTime = (new Date()).getTime();
+            const duration = (currentTime - testStartTime) / 1000; // Seconds
+
+            if (duration <= 0 || totalBytesLoaded === 0) return;
+
+            calculateAndDisplaySpeed(totalBytesLoaded, duration);
+        }
+
+        // Function to stop test and show final result
+        function stopTest() {
+            isTesting = false;
+            clearInterval(updateInterval);
+            clearTimeout(testTimeout);
+            
+            if (xhr) {
+                xhr.abort(); // Stop the download
+            }
+
+            // Final Calculation
+            updateUI(); // One last update for final speed
+            
+            reloadBtn.classList.remove('disabled');
+        }
+
+        // Core Calculation Logic
+        function calculateAndDisplaySpeed(bytes, seconds) {
+            const bitsLoaded = bytes * 8;
+            const speedBps = bitsLoaded / seconds;
+            const speedKbps = speedBps / 1024;
+            const speedMbps = speedKbps / 1024;
+
+            // Display Logic (Fluctuating numbers)
+            if (speedMbps > 1) {
+                speedDisplay.innerText = speedMbps.toFixed(1);
+                unitDisplay.innerText = "Mbps";
+            } else {
+                speedDisplay.innerText = speedKbps.toFixed(0);
+                unitDisplay.innerText = "Kbps";
+            }
+        }
+
+        // Start test automatically on page load
+        window.onload = startTest;
+
+    </script>
 </body>
 </html>
-
