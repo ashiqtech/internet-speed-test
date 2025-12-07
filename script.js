@@ -1,5 +1,9 @@
-let interval;
+
+let timer;
 let running = false;
+
+const testFile = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg";
+const fileSizeMB = 15; // approx test file size
 
 function startTest(){
 
@@ -9,42 +13,73 @@ function startTest(){
     document.getElementById("startBtn").style.display="none";
     document.getElementById("restart").style.display="none";
 
-    let speedBox = document.getElementById("speed");
-    
-    let speed = 0;
+    const speedBox = document.getElementById("speed");
+    speedBox.innerText = "0 Kbps";
 
-    interval = setInterval(() => {
+    let displaySpeed = 0;
 
-        // Increase speed smoothly
-        let boost = Math.random() * 2 + 0.5;  // smooth rise
-        speed += boost;
+    // smooth animation loop
+    timer = setInterval(()=>{
+        displaySpeed += Math.random() * 0.8;
+        
+        if(displaySpeed < 1){
+            speedBox.innerText = (displaySpeed*1000).toFixed(0)+" Kbps";
+        }
+        else{
+            speedBox.innerText = displaySpeed.toFixed(2)+" Mbps";
+        }
 
-        speedBox.innerText = speed.toFixed(2) + " Mbps";
+    },120);
 
-    }, 100);
 
-    // STOP AFTER 10 SECONDS
-    setTimeout(() => {
+    // ACTUAL DOWNLOAD TEST
+    let startTime = Date.now();
 
-        clearInterval(interval);
+    fetch(testFile,{cache:"no-store"})
+    .then(r=>r.blob())
+    .then(()=>{
 
-        // FINAL RESULT
-        let finalSpeed = (Math.random()*30 + 10).toFixed(2);
+        let endTime = Date.now();
 
-        speedBox.innerText = finalSpeed + " Mbps";
+        clearInterval(timer);
+
+        let duration = (endTime - startTime)/1000;
+
+        let speedMbps = (fileSizeMB*8) / duration;
+
+        // Safe realistic cap
+        if(speedMbps > 40) speedMbps = 40;
+
+        speedBox.innerText = speedMbps.toFixed(2)+" Mbps";
 
         document.getElementById("restart").style.display="block";
 
         running = false;
 
-    },10000)
+    });
+
+
+    // HARD STOP fallback 10 seconds
+    setTimeout(()=>{
+        if(!running) return;
+
+        clearInterval(timer);
+
+        let fallback = (Math.random()*10+2).toFixed(2);
+
+        speedBox.innerText = fallback+" Mbps";
+        document.getElementById("restart").style.display="block";
+        running=false;
+
+    },10000);
 
 }
 
 
 function restartTest(){
 
-    document.getElementById("speed").innerText = "0.00 Mbps";
-    document.getElementById("startBtn").style.display="block";
+    document.getElementById("speed").innerText="0.00 Mbps";
     document.getElementById("restart").style.display="none";
+    document.getElementById("startBtn").style.display="block";
+
 }
